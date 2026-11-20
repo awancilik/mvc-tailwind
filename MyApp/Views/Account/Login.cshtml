@@ -1,0 +1,188 @@
+@using MyApp.Data
+@{
+    ViewData["Title"] = "Sign In";
+    ViewData["LoginPath"] = "/Account/Login";
+    ViewData["ReturnUrl"] = "/Account/Login";
+}
+
+@inject SignInManager<ApplicationUser> SignInManager
+
+<div class="mt-8">
+@if (!SignInManager.IsSignedIn(User))
+{
+    <div class="max-w-xl mx-auto">
+        <h1 class="mb-4 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            Sign In
+        </h1>    
+        <div class="sm:shadow overflow-hidden sm:rounded-md">
+            <form method="post">
+                <div class="px-4 bg-white dark:bg-black sm:p-6">
+                    <div asp-validation-summary="All" class="text-danger font-semibold text-center"></div>
+                    <div class="flex flex-col gap-y-4">
+                        <div>
+                            <input type="hidden" name="redirect" value="@(Html.GetQueryString("ReturnUrl") ?? ViewData["ReturnUrl"])" />
+                        </div>
+                        <div>
+                            <div>
+                                <label for="UserName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                                <div class="mt-1 relative">
+                                    <input type="text" class="@Css.InputText" id="Email" name="Email" placeholder="Email" spellcheck="false" value="@Html.GetFormData("Email")">
+                                </div>
+                            </div>                            
+                        </div>
+                        <div>
+                            <div>
+                                <label for="UserName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                                <div class="mt-1 relative">
+                                    <input class="@Css.InputText" id="Password" name="Password" type="Password" placeholder="Password" value="">
+                                </div>
+                            </div>                            
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="chkRememberMe" name="rememberMe" value="true" checked="checked"
+                                       class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                <label for="chkRememberMe" class="ml-2 block text-sm text-gray-900">Remember Me</label>
+                            </div>
+                            <div class="text-sm">
+                                <a asp-controller="Account" asp-action="ForgotPassword" class="font-medium text-indigo-600 hover:text-indigo-500">Forgot your password?</a>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+
+                <div class="px-4 py-3 text-right sm:px-6">
+                    <div class="flex justify-end">
+                        <a class="@Css.SecondaryButton w-1/2" asp-area="" asp-controller="Account" asp-action="Register" asp-route-ReturnUrl="@ViewData["ReturnUrl"]">Register New User</a>
+                        <button type="submit" class="@Css.PrimaryButton w-1/2 ml-2">Sign In</button>
+                    </div>
+                </div>            
+            </form>        
+            
+            <div class="m-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300 dark:border-gray-700"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="bg-white dark:bg-black px-2 text-gray-500">Or continue with</span>
+                    </div>
+                </div>
+                <div>
+                    @{
+                        var loginProviders = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+                        if (loginProviders.Count == 0)
+                        {
+                            <div>
+                                <p>
+                                    There are no external authentication services configured. See <a class="@Css.Link" href="https://go.microsoft.com/fwlink/?LinkID=532715">this article</a>
+                                    for details on setting up this ASP.NET application to support logging in via external services.
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <form asp-action="ExternalLogin" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" 
+                                  class="mt-6 grid grid-cols-4 gap-3">
+                                @foreach (var provider in loginProviders)
+                                {
+                                    <div>
+                                        <button type="submit" class="cursor-pointer inline-flex w-full justify-center rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-black py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50" 
+                                                name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">
+                                            <span class="sr-only">Sign in with @provider.Name</span>
+                                            @if (@provider.Name.ToLower() == "facebook") {
+                                                <svg class="size-6 text-gray-700 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95"/></svg>                                            
+                                            } else if (@provider.Name.ToLower() == "google") {
+                                                <svg class="size-6 text-gray-700 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M11.99 13.9v-3.72h9.36c.14.63.25 1.22.25 2.05c0 5.71-3.83 9.77-9.6 9.77c-5.52 0-10-4.48-10-10S6.48 2 12 2c2.7 0 4.96.99 6.69 2.61l-2.84 2.76c-.72-.68-1.98-1.48-3.85-1.48c-3.31 0-6.01 2.75-6.01 6.12s2.7 6.12 6.01 6.12c3.83 0 5.24-2.65 5.5-4.22h-5.51z"/></svg>
+                                            } else if (@provider.Name.ToLower() == "microsoft") {
+                                                <svg class="size-6 text-gray-700 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="currentColor" d="M2 3h9v9H2zm9 19H2v-9h9zM21 3v9h-9V3zm0 19h-9v-9h9z"/></svg>
+                                            } else {
+                                                <i class="text-gray-700 dark:text-gray-300 text-lg fab fa-@provider.Name.ToLower()"></i>
+                                            }
+                                        </button>
+                                    </div>
+                                }
+                            </form>
+                        }
+                    }
+                </div>
+            </div>
+        
+            </div>
+
+        <div class="mt-8">
+            <b>Quick Login</b>
+            <div class="mt-2">
+                <span class="@Css.SecondaryButton px-3 mb-1" data-click="switchUser:test@@email.com">test@@email.com</span>
+                <span class="@Css.SecondaryButton px-3 mb-1" data-click="switchUser:employee@@email.com">employee@@email.com</span>
+                <span class="@Css.SecondaryButton px-3 mb-1" data-click="switchUser:manager@@email.com">manager@@email.com</span>
+                <span class="@Css.SecondaryButton px-3 mb-1" data-click="switchUser:admin@@email.com">admin@@email.com</span>
+                <span class="@Css.SecondaryButton px-3 mb-1" data-click="switchUser:new@@user.com">new@@user.com</span>
+            </div>
+        </div>
+    </div>    
+}
+else
+{
+    <div class="mx-auto prose prose-xl">
+        <table id="session-info">
+            <caption class="@Css.H1 mb-4">Authenticated User Session</caption>
+            <tbody>
+                <tr>
+                    <th>Id</th>
+                    <td>@User.GetUserId()</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td>@User.GetEmail()</td>
+                </tr>
+                <tr>
+                    <th>DisplayName</th>
+                    <td>@User.GetDisplayName()</td>
+                </tr>
+                @if (User.GetRoles().Length > 0)
+                {
+                    <tr>
+                        <th>Roles</th>
+                        <td>@User.GetRoles().Join(", ")</td>
+                    </tr>
+                }
+                <tr>
+                    <th>ProfileUrl</th>
+                    <td>
+                        <img class="w-20 h-20" src="@User.GetPicture()" />
+                    </td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2">
+                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                            <button type="submit" class="@Css.SecondaryButton">Sign Out</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <p class="my-2">View Public and Secure Pages and APIs on <a class="@Css.Link" href="/">Home page</a>.</p>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+}
+</div>
+
+@section Scripts {
+<script type="module">
+import { $1, bindHandlers } from "@@servicestack/client"
+bindHandlers({
+   switchUser(u) {
+       $1("#Email").value = u
+       $1("#Password").value = 'p@55wOrd'
+   },
+})  
+</script>
+}
